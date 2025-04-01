@@ -1,0 +1,298 @@
+:root {
+    --primary-bg: #dfe4ec;
+    --pos-btn: #2197ff;
+    --neg-btn: #ff4a21;
+}
+
+/* === General Bootstrap Overrides === */
+p {
+    margin-bottom: 0;
+}
+
+.section-title {
+    padding-bottom: 15px;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #212529;
+}
+
+#PageNav {
+    margin-bottom: 25px;
+}
+
+.SubmitBtn {
+    border: 1px solid var(--pos-btn);
+    border-radius: 10px;
+    background-color: var(--pos-btn);
+    color: white;
+    padding: 5px;
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.DeleteBtn {
+    border: 1px solid var(--neg-btn);
+    border-radius: 10px;
+    background-color: var(--neg-btn);
+    color: white;
+    padding: 5px;
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.optionLabel {
+    font-weight: 600;
+}
+
+#UploadFeedSourceRecordsContainer {
+    padding-bottom: 25px;
+}
+
+/* === Image Uploads === */
+#MediaUploadAndDisplayContainer {
+    /*padding: 1rem;*/
+    /*border-radius: 15px;*/
+    /*background-color: var(--primary-bg);*/
+    /*border: 1px solid rgba(168, 168, 168, 0.3) !important;*/
+    /*box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.08) !important;*/
+}
+
+#ImageUploadContainer {
+    margin-bottom: 25px;
+}
+
+.UploadedImageSubDisplayContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+.ImageBtns {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    flex-direction: row;
+    padding: 0 3.5rem 0 3.5rem;
+    gap: 10px;
+}
+
+.image-container {
+    margin: 20px 0;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    text-align: center;
+}
+
+.uploaded-image {
+    max-width: 100%;
+    height: auto;
+    border-radius: 5px;
+}
+
+/* === Images Table === */
+#ImageTableFiltersContainer {
+    margin-bottom: 25px;
+}
+
+.fa-check {
+    color: limegreen !important;
+}
+.fa-xmark {
+    color: orangered !important;
+}
+
+#ImageTableFiltersContainer #filterForm {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+#ImageTableSearch {
+    padding: 0;
+}
+
+#ImageTableSearch #search {
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid var(--primary-bg);
+    background-color: var(--primary-bg);
+}
+
+#ImageTableSearch .ClearSearchBtn {
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid var(--primary-bg);
+    background-color: var(--primary-bg);
+}
+
+#ImageTableSearch .ClearSearchBtn:hover {
+    background-color: #e0e0e0;
+    cursor: pointer;
+}
+
+#ImageFilterSortSubContainer {
+    display: flex;
+    flex-direction: row;
+}
+
+#ImageFilterSortSubContainer div {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 5px;
+    padding: 0;
+}
+
+#ImageTableFilters {
+    display: flex;
+    flex-direction: row;
+}
+
+#ImageTableFilters #filter, #ImageTableSorts #sort {
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid var(--primary-bg);
+    background-color: var(--primary-bg);
+}
+
+#ImageTableSorts {
+    display: flex;
+    flex-direction: row;
+}
+
+#ImageTableContainer table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+#ImageTableContainer th, #ImageTableContainer td {
+    padding: 10px;
+    text-align: left;
+    border: none;
+}
+
+#ImageTableContainer th {
+    background-color: #767985FF !important;
+    color: white !important;
+    text-decoration: none;
+}
+
+#ImageTableContainer th:hover {
+    text-decoration: underline;
+}
+
+#ImageTableContainer table th a {
+    color: white !important;
+    text-decoration: none;
+}
+
+#ImageTableContainer table th a:hover {
+    text-decoration: underline;
+}
+
+#ImageTableContainer tr:nth-child(even) {
+    background-color: #f9f9f9;  /* Light gray for even rows */
+}
+#ImageTableContainer tr:nth-child(odd) {
+    background-color: #ffffff;  /* White for odd rows */
+}
+#ImageTableContainer tr:hover {
+    background-color: #f1f1f1;  /* Hover effect */
+}
+
+#ImageTableContainer img {
+    max-width: 100px;
+    height: auto;
+}
+
+#ImageTableContainer button {
+    background-color: #ff4d4d;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+}
+#ImageTableContainer button:hover {
+    background-color: #cc0000;
+}
+
+/* === Route Dropdowns === */
+.route-group {
+    margin-bottom: 15px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.route-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f5f5f5;
+    padding: 10px 15px;
+}
+
+.collapsible-btn {
+    background: none;
+    border: none;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 5px;
+    flex-grow: 1;
+    text-align: left;
+}
+
+.route-controls {
+    display: flex;
+    gap: 10px;
+}
+
+.route-controls button {
+    padding: 5px 10px;
+    background: #e0e0e0;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.route-content {
+    display: none;
+    padding: 15px;
+}
+
+.route-content table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.route-content th,
+.route-content td {
+    padding: 8px;
+    border-bottom: 1px solid #eee;
+}
+
+.active-status {
+    color: green;
+    font-weight: bold;
+}
+
+.inactive-status {
+    color: #d32f2f;
+}
+
+.arrow {
+    margin-left: 10px;
+}
+
+.delete-selected-btn {
+    margin-top: 20px;
+    padding: 10px 15px;
+    background: #d32f2f;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}

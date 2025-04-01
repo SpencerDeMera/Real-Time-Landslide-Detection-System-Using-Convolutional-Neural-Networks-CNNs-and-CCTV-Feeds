@@ -1,0 +1,103 @@
+{% extends "index.html" %}
+{% block title %} Image Table {% endblock %}
+
+{% load static %}
+
+{% block content %}
+<h1>Image Table</h1>
+
+<div id="ImageTableFiltersContainer">
+    <form method="get" id="filterForm">
+        <div class="col-lg-12" id="ImageTableSearch">
+            <input type="text" name="search" id="search" placeholder="Enter location name..." value="{{ searchQueryStr }}" style="width:80%;">
+            <a href="?{% if filter_prediction != 'all' %}filter={{ filter_prediction }}&{% endif %}{% if sort_order %}sort={{ sort_order }}{% endif %}" class="ClearSearchBtn">Clear</a>
+        </div>
+
+        <div id="ImageFilterSortSubContainer" class="col-lg-12" style="gap:10px; margin:0px;">
+            <div class="col-lg-6" id="ImageTableFilters">
+                <label class="optionLabel" for="filter">Filter by Prediction:</label>
+                <select name="filter" id="filter">
+                    <option value="all" {% if filter_prediction == "all" %}selected{% endif %}>Show All</option>
+                    <option value="landslide" {% if filter_prediction == "landslide" %}selected{% endif %}>Landslide/Road Anomaly</option>
+                    <option value="normal" {% if filter_prediction == "normal" %}selected{% endif %}>Normal Conditions</option>
+                </select>
+            </div>
+
+            <div class="col-lg-6" id="ImageTableSorts">
+                <label class="optionLabel" for="sort">Sort by:</label>
+                <select name="sort" id="sort">
+                    <option value="-uploadedDate" {% if sort_order == "-uploadedDate" %}selected{% endif %}>Date (Newest First)</option>
+                    <option value="uploadedDate" {% if sort_order == "uploadedDate" %}selected{% endif %}>Date (Oldest First)</option>
+                    <option value="locationName" {% if sort_order == "locationName" %}selected{% endif %}>Location (A-Z)</option>
+                    <option value="-locationName" {% if sort_order == "-locationName" %}selected{% endif %}>Location (Z-A)</option>
+                    <option value="prediction" {% if sort_order == "prediction" %}selected{% endif %}>Prediction (Normal → Landslide)</option>
+                    <option value="-prediction" {% if sort_order == "-prediction" %}selected{% endif %}>Prediction (Landslide → Normal)</option>
+                </select>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div id="ImageTableContainer">
+    <!-- Table to display MediaFile entries -->
+    <form method="post" action="{% url 'bulkImageDelete' %}">
+        <button class="DeleteBtn" type="submit" onclick="return confirm('Are you sure you want to delete the selected images?');">Delete Selected</button>
+        {% csrf_token %}
+        <table>
+            <thead>
+                <tr>
+                    <th><input type="checkbox" id="select-all"></th>
+                    <th>
+                        <a href="?sort={% if sort_order == 'uploadedDate' %}-uploadedDate{% else %}uploadedDate{% endif %}">
+                            Image
+                        </a>
+                    </th>
+                    <th>
+                        <a href="?sort={% if sort_order == 'locationName' %}-locationName{% else %}locationName{% endif %}">
+                            Location
+                        </a>
+                    </th>
+                    <th>
+                        <a href="?sort={% if sort_order == 'uploadedDate' %}-uploadedDate{% else %}uploadedDate{% endif %}">
+                            Date
+                        </a>
+                    </th>
+                    <th>Is Manual Upload</th>
+                    <th>
+                        <a href="?sort={% if sort_order == 'prediction' %}-prediction{% else %}prediction{% endif %}">
+                            Prediction
+                        </a>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for mediaFile in mediaFiles %}
+                <tr>
+                    <td><input type="checkbox" name="selectedIds" value="{{ mediaFile.id }}"></td>
+                    <td><img src="{{ mediaFile.mediaFile.url }}" alt="Uploaded Image"></td>
+                    <td>{{ mediaFile.locationName }}</td>
+                    <td>{{ mediaFile.uploadedDate|date:"Y-m-d H:i:s" }}</td>
+                    <td>{{ mediaFile.isManualUpload }}</td>
+                    <td>
+                        {% if mediaFile.predictionString %}
+                            {{ mediaFile.predictionString }}
+                        {% else %}
+                            Not Analyzed
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6">No images uploaded yet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </form>
+</div>
+
+<p><a href="{% url 'analyze' %}" style="padding-bottom: 25px;">Go back to Analyze Page</a></p>
+
+<script src="{% static 'js/imageManagement.js' %}"></script>
+
+{% endblock %}

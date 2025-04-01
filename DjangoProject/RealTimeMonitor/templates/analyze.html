@@ -1,0 +1,33 @@
+{% extends "index.html" %}
+{% block title %} Analyze Images {% endblock %}
+
+{% block content %}
+
+<!-- Include the analysis selection form -->
+{% include "analysisSelection.html" %}
+
+<!-- Include the image upload form -->
+{% include "imageUpload.html" %}
+
+<!-- Scrape in stream source data -->
+<div id="UploadFeedSourceRecordsContainer">
+    <h3>Scrape Live Feed Source Data</h3>
+    <form method="post" action="{% url 'scrapeAndSaveFeedData' %}">
+        {% csrf_token %}
+        <button class="SubmitBtn" type="submit">Scrape and Save Data</button>
+    </form>
+    {% if feedSources %}
+        <p>Total Feed Sources: {{ feedSources|length }}</p>
+    {% endif %}
+</div>
+
+<!-- Display success/error messages -->
+{% if messages %}
+<div>
+    {% for message in messages %}
+    <p>{{ message }}</p>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% endblock %}

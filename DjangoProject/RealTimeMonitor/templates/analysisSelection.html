@@ -1,0 +1,100 @@
+{% load static %}
+
+{% block content %}
+<h1>Feed Sources</h1>
+
+<div id="FeedSourcesTableContainer">
+    <form method="post" id="feedSelectionForm" action="{% url 'bulkAnalyzeImages' %}">
+        {% csrf_token %}
+
+        <label for="analysisDuration">Repeat Analysis Duration (Hours):</label>
+        <select id="analysisDuration" name="analysisDuration">
+            <option value="0">Instant</option>
+            <option value="1">1 Hour</option>
+            <option value="2">2 Hours</option>
+            <option value="3">3 Hours</option>
+            <option value="4">4 Hours</option>
+            <option value="5">5 Hours</option>
+            <option value="6">6 Hours</option>
+            <option value="7">7 Hours</option>
+            <option value="8">8 Hours</option>
+            <option value="9">9 Hours</option>
+            <option value="10">10 Hours</option>
+            <option value="11">11 Hours</option>
+            <option value="12">12 Hours</option>
+            <option value="13">13 Hours</option>
+            <option value="14">14 Hours</option>
+            <option value="15">15 Hours</option>
+            <option value="16">16 Hours</option>
+            <option value="17">17 Hours</option>
+            <option value="18">18 Hours</option>
+            <option value="19">19 Hours</option>
+            <option value="20">20 Hours</option>
+            <option value="21">21 Hours</option>
+            <option value="22">22 Hours</option>
+            <option value="23">23 Hours</option>
+            <option value="24">24 Hours</option>
+        </select>
+        <button class="SubmitBtn" type="submit" id="analyzeSelectedBtn">
+            Analyze Selected
+        </button>
+
+        {% for route, feedSources in groupedFeedSources.items %}
+        <div class="route-group">
+            <div class="route-header">
+                <button type="button" class="collapsible-btn">
+                    {{ route|default:"Unknown Route" }}
+                    <span class="arrow">▼</span>
+                </button>
+                <div class="route-controls">
+                    <button type="button" class="select-all-btn" data-route="{{ route.grouper|slugify }}">
+                        Select All
+                    </button>
+                    <button type="button" class="deselect-all-btn" data-route="{{ route.grouper|slugify }}">
+                        Deselect All
+                    </button>
+                </div>
+            </div>
+
+            <div class="route-content">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Select</th>
+                            <th>Source Name</th>
+                            <th>County</th>
+                            <th>Nearby Place</th>
+                            <th>Last Poll Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for feedSource in feedSources %}
+                        <tr>
+                            <td>
+                                <input type="checkbox" name="selectedIds" value="{{ feedSource.id }}" class="route-checkbox {{ route.grouper|slugify }}-checkbox">
+                            </td>
+                            <td>{{ feedSource.streamSourceName }}</td>
+                            <td>{{ feedSource.county }}</td>
+                            <td>{{ feedSource.nearbyPlace }}</td>
+                            <td>{{ feedSource.lastPollDate|date:"Y-m-d H:i:s" }}</td>
+                            <td>
+                                {% if feedSource.isPolling %}
+                                    <span class="active-status">Active</span>
+                                {% else %}
+                                    <span class="inactive-status">Inactive</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endfor %}
+    </form>
+</div>
+
+<script src="{% static 'js/feedSourceManagement.js' %}"></script>
+
+{% endblock %}
