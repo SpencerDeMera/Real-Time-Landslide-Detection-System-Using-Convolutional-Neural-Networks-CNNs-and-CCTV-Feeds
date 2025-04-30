@@ -1,0 +1,36 @@
+{
+  "name": "LandslideLens",
+  "version": "1.0.0",
+  "description": "Desktop application for monitoring and tracking the occurance of landslides in California via CalTrans CCTV.",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder"
+  },
+  "dependencies": {
+    "wait-port": "^0.2.14"
+  },
+  "devDependencies": {
+    "electron": "^28.2.1",
+    "electron-builder": "^24.9.1"
+  },
+  "build": {
+    "appId": "com.mycompany.myelectrondjangoapp",
+    "productName": "LandslideLens",
+    "icon": "assets/landslidelens-icon.ico",
+    "files": [
+      "**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "../django-backend/dist",
+        "to": "django-backend"
+      }
+    ],
+    "win": {
+      "target": [
+        "nsis"
+      ]
+    }
+  }
+}

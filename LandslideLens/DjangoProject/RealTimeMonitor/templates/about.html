@@ -1,0 +1,66 @@
+{% extends "index.html" %}
+
+{% block content %}
+<h1 style="text-align: center;">About LandslideLens</h1>
+<br>
+<div class="aboutus-text">
+    <p>
+        Landslides pose significant risks to infrastructure and human safety, particularly in regions like California,
+        where they are prevalent. Current detection methods rely heavily on manual analysis of satellite imagery, CCTV feeds and
+        reports from authorities and the public. This manual approach is time-consuming and prone to delays, which
+        can hinder timely response and mitigation efforts.
+    </p>
+    <br>
+    <p>
+        To address these challenges, LandslideLens offers a web-based alert system that leverages
+        Convolutional Neural Networks (CNNs) to detect landslides in real-time from live CCTV feeds and do so
+        automatically. By automating the detection process, the system aims to enhance the efficiency and accuracy
+        of landslide monitoring, providing timely alerts and reducing the dependency on human intervention.
+    </p>
+</div>
+<br>
+<div class="toolsSection" id="tools">
+    <div class="toolsContainer">
+        <div class="toolsTitling">
+            <h1 class="toolsTitle">Tools Used</h1>
+        </div>
+        <div class="toolsBody">
+            <div class="toolsGrids">
+                <div class="cats">
+                    <div class="catsTitling">
+                        <div class="toolsIcon" id="front_icon">
+                            <i class="fa-solid fa-code" aria-hidden="true"></i>
+                        </div>
+                        <p class="catsTitle">Front-End</p>
+                    </div>
+                    <div class="toolsList">
+                        <p>Python</p><p>JavaScript</p><p>HTML5</p><p>CSS3</p>
+                    </div>
+                </div>
+                <div class="cats">
+                    <div class="catsTitling">
+                        <div class="toolsIcon" id="back_icon">
+                            <i class="fas fa-database" aria-hidden="true"></i>
+                        </div>
+                        <p class="catsTitle">Back-End</p>
+                    </div>
+                    <div class="toolsList">
+                        <p>Django</p><p>Python</p><p>Threading</p>
+                    </div>
+                </div>
+                <div class="cats">
+                    <div class="catsTitling">
+                        <div class="toolsIcon" id="api_icon">
+                            <i class="fas fa-sitemap" aria-hidden="true"></i>
+                        </div>
+                        <p class="catsTitle">APIs & Tools</p>
+                    </div>
+                    <div class="toolsList">
+                        <p>Bootstrap 5.0</p><p>NWS API</p><p>CalTrans CCTV</p><p>Git</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

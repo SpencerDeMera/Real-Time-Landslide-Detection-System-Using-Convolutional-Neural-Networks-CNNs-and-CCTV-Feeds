@@ -1,0 +1,25 @@
+{% extends "index.html" %}
+{% block title %} Analyze Images {% endblock %}
+
+{% block content %}
+
+<!-- Include the analysis selection form -->
+<div id="AnalysisErrorsContainer" style="display: none;"></div>
+
+{% include "analysisSelection.html" %}
+
+<div class="row">
+    <!-- Include the image upload form -->
+    {% include "imageUpload.html" %}
+</div>
+
+<!-- Display success/error messages -->
+{% if messages %}
+<div>
+    {% for message in messages %}
+    <p>{{ message }}</p>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% endblock %}
