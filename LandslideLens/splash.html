@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Loading...</title>
+  <style>
+    body {
+      margin: 0;
+      background: white;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      font-family: sans-serif;
+    }
+
+    .app-icon {
+      width: 64px;
+      height: 64px;
+      margin-bottom: 20px;
+    }
+
+    .loading-text {
+      margin-top: 20px;
+      font-size: 1.2rem;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <img src="assets/landslidelens-icon.ico" alt="App Icon" class="app-icon">
+  <div id="loadingText" class="loading-text">Loading LandslideLens</div>
+
+  <script>
+    const loadingText = document.getElementById('loadingText');
+    let dotCount = 0;
+
+    setInterval(() => {
+      dotCount = (dotCount + 1) % 4; // 0 to 3 dots
+      loadingText.textContent = 'Loading LandslideLens' + '.'.repeat(dotCount);
+    }, 500); // Adjust speed here if needed
+  </script>
+</body>
+</html>
