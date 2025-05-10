@@ -1,7 +1,119 @@
 {% extends "index.html" %}
 {% block title %} LandslideLens Home {% endblock %}
 
+{% load static %}
+
 {% block content %}
-<h1>Home</h1>
+
+<div id="HomePageContainer" class="row">
+    <div class="col-lg-7" id="LeftSideContainer">
+        <div id="DetectedAnomalies">
+            <h3>Anomalies</h3>
+
+            <div id="Anomalies-Infinite-LoadingContainer">
+                <style>
+                    .loader {
+                        display:block!important;
+                        margin:10px auto 10px auto !important;;
+                        border:10px solid #EAF0F6!important;
+                        border-radius:50%!important;
+                        border-top:10px solid var(--theme)!important;
+                        width:50px!important;
+                        height:50px!important;
+                        animation:spinner 1s linear infinite
+                    }
+                    @keyframes spinner{
+                        to {
+                            transform:rotate(360deg)
+                        }
+                    }
+                </style>
+                <div class="loader"></div>
+            </div>
+
+            <div id="MediaFilesWAnomalies"></div>
+        </div>
+        <div id="CurrentlyPolling">
+            <h3>Currently Polling</h3>
+
+            <div id="Polling-Infinite-LoadingContainer">
+                <style>
+                    .loader {
+                        display:block!important;
+                        margin:10px auto 10px auto !important;;
+                        border:10px solid #EAF0F6!important;
+                        border-radius:50%!important;
+                        border-top:10px solid var(--theme)!important;
+                        width:50px!important;
+                        height:50px!important;
+                        animation:spinner 1s linear infinite
+                    }
+                    @keyframes spinner{
+                        to {
+                            transform:rotate(360deg)
+                        }
+                    }
+                </style>
+                <div class="loader"></div>
+            </div>
+
+            <div id="FeedSourcesPolling"></div>
+        </div>
+
+        <div class="row">
+            <!-- Scrape in stream source data -->
+            <div id="UploadFeedSourceRecordsContainer" class="col-lg-6">
+                <h3>Scrape Live Feed Source Data</h3>
+                <form method="post" action="{% url 'scrapeAndSaveFeedData' %}">
+                    {% csrf_token %}
+                    <button class="SubmitBtn" type="submit">Scrape and Save Data</button>
+                </form>
+                {% if feedSources %}
+                    <p>Total Feed Sources: {{ feedSources|length }}</p>
+                {% endif %}
+            </div>
+
+            <div id="UploadFeedSourceRecordsContainer" class="col-lg-6">
+                <h3>Scrape NOAA/NWS Zone Data</h3>
+                <form method="post" action="{% url 'scrapeNWSZoneData' %}">
+                    {% csrf_token %}
+                    <button class="SubmitBtn" type="submit">Scrape and Save Data</button>
+                </form>
+                {% if weatherZones %}
+                    <p>Total Zones: {{ weatherZones|length }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4" id="WeatherInfoContainer">
+        <h3>Weather Alerts</h3>
+
+        <div id="Weather-Infinite-LoadingContainer">
+            <style>
+                .loader {
+                    display:block!important;
+                    margin:10px auto 10px auto !important;;
+                    border:10px solid #EAF0F6!important;
+                    border-radius:50%!important;
+                    border-top:10px solid var(--theme)!important;
+                    width:50px!important;
+                    height:50px!important;
+                    animation:spinner 1s linear infinite
+                }
+                @keyframes spinner{
+                    to {
+                        transform:rotate(360deg)
+                    }
+                }
+            </style>
+            <div class="loader"></div>
+        </div>
+
+        <div id="WeatherInfoCards"></div>
+    </div>
+</div>
+
+<script src="{% static 'js/weatherData.js' %}"></script>
+<script src="{% static 'js/activeAnalysisManagement.js' %}"></script>
 
 {% endblock %}

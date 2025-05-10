@@ -10,6 +10,8 @@ import uuid
 from .models import MediaFile
 import tempfile
 import traceback
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
 
 # Define headers to mimic a real browser
 HEADERS = {
@@ -18,42 +20,107 @@ HEADERS = {
 
 def getSoup(url):
     # Fetches a webpage and returns a BeautifulSoup object
-    response = requests.get(url, headers=HEADERS)
-    if response.status_code == 200:
-        return BeautifulSoup(response.text, "html.parser")
-    else:
-        print(f"Failed to fetch {url}, Status Code: {response.status_code}")
-        return None
+    try:
+        response = requests.get(url, headers=HEADERS, timeout=10)
+        if response.status_code == 200:
+            return {
+                "success": True,
+                "soup": BeautifulSoup(response.text, "html.parser"),
+                "error": None
+            }
+        else:
+            return {
+                "success": False,
+                "soup": None,
+                "error": f"Failed to fetch {url}, status code: {response.status_code}"
+            }
+    except requests.exceptions.RequestException as e:
+        return {
+            "success": False,
+            "soup": None,
+            "error": f"Network error while requesting {url}"
+        }
 
-def extractImageUrl(page_url):
-    # Extracts the first image URL found in the page from a JavaScript variable
-    soup = getSoup(page_url)
-    if not soup:
-        print(f"Failed to retrieve or parse {page_url}")
-        return None
 
+def extractImageUrl(pageURL):
+    result = getSoup(pageURL)
+
+    if not result["success"]:
+        error_msg = result["error"]
+
+        # Optional: parse for known patterns like timeouts
+        if "timed out" in error_msg.lower():
+            return {
+                "success": False,
+                "image_url": None,
+                "error": f"URL source capture for {pageURL} timed out — check your internet connection."
+            }
+        elif "Failed to establish a new connection" in error_msg or "Name or service not known" in error_msg:
+            return {
+                "success": False,
+                "image_url": None,
+                "error": f"Network error while accessing the image URL {pageURL} — check DNS or connectivity."
+            }
+        else:
+            return {
+                "success": False,
+                "image_url": None,
+                "error": error_msg
+            }
+
+    soup = result["soup"]
     script_tags = soup.find_all("script")
+
     for script in script_tags:
         if script.string:
             match = re.search(r'var\s+posterURL\s*=\s*"([^"]+)"', script.string)
             if match:
                 full_url = match.group(1)
-                print(f"Extracted Image URL from script: {full_url}")  # Debugging
-                return full_url
+                print(f"Extracted Image URL from script: {full_url}")
+                return {
+                    "success": True,
+                    "image_url": full_url,
+                    "error": None
+                }
 
-    print(f"No image URL found on {page_url}")
+    error_msg = f"No image URL found in scripts on {pageURL}"
+    print(error_msg)
+    return {
+        "success": False,
+        "image_url": None,
+        "error": error_msg
+    }
 
 def downloadImage(imageUrl, locationName):
+    result = {
+        "success": False,
+        "mediaFileToAddorUpdate": None,
+        "error": None,
+    }
+
+    tempFile_path = None
+
     if not imageUrl:
-        print("No image URL provided.")
-        return None
+        result["error"] = "No image URL provided."
+        return result
 
     try:
         # Step 1: Download image to temp file
-        with tempfile.NamedTemporaryFile(suffix='.jpg', delete=False) as temp_file:
-            temp_file.write(urllib.request.urlopen(imageUrl).read())
-            temp_file.flush()
-            temp_file_path = temp_file.name
+        with tempfile.NamedTemporaryFile(suffix='.jpg', delete=False) as tempFile:
+            try:
+                response = urllib.request.urlopen(imageUrl, timeout=10)
+                tempFile.write(response.read())
+                tempFile.flush()
+                tempFile_path = tempFile.name
+            except urllib.error.URLError as e:
+                if isinstance(e.reason, TimeoutError):
+                    result["error"] = f"Image download for {locationName} timed out — check your internet connection."
+                else:
+                    result["error"] = f"Network error while accessing the image for {locationName} at URL: {imageUrl}"
+                return result
+            except Exception as e:
+                result["error"] = f"Unexpected error during download: {str(e)}"
+                return result
 
         # Step 2: Delete existing record (file + DB)
         existing_record = MediaFile.objects.filter(locationName=locationName).first()
@@ -78,37 +145,46 @@ def downloadImage(imageUrl, locationName):
                     time.sleep(1)
             if not deleted:
                 # If deletion still fails, log the issue and proceed.
-                print(f"Unable to delete locked file for {locationName} after retries. " 
-                      "Proceeding without file deletion. (This may leave orphan files.)")
+                print(f"Unable to delete locked file for {locationName} after retries. Proceeding without file deletion. (This may leave orphan files.)")
             # Remove the DB record regardless.
             existing_record.delete()
             print(f"Deleted existing MediaFile record for {locationName}")
 
         # Step 3: Create and save a new record
-        with open(temp_file_path, 'rb') as f:
-            file_name = f"{uuid.uuid4()}.jpg"
-            django_file = File(f, name=file_name)
-            media_file = MediaFile(
-                mediaFile=django_file,
+        with open(tempFile_path, 'rb') as f:
+            file_data = f.read()
+            fileName = f"{uuid.uuid4()}.jpg"
+            saved_path = default_storage.save(f"uploads/{fileName}", ContentFile(file_data))
+
+            mediaFileToAddorUpdate = MediaFile(
+                mediaFile=saved_path,  # <-- This is just the relative path (string)
                 locationName=locationName,
                 uploadedDate=timezone.now(),
                 isManualUpload=False,
             )
-            media_file.save()
-            print(f"Saved new MediaFile with ID: {media_file.id}")
-            return media_file
+            mediaFileToAddorUpdate.save()
+            
+            print(f"Saved new MediaFile with ID: {mediaFileToAddorUpdate.id}")
+            
+            result["success"] = True
+            result["mediaFileToAddorUpdate"] = {
+                "id": str(mediaFileToAddorUpdate.id),
+                "file_url": mediaFileToAddorUpdate.mediaFile.url,
+                "location_name": mediaFileToAddorUpdate.locationName
+            }
+            return result
 
     except Exception as e:
-        print(f"[DOWNLOAD ERROR] {imageUrl}: {e}")
+        result["error"] = f"Unexpected processing error: {e}"
         traceback.print_exc()
-        return None
+        return result
 
     finally:
         # Ensure the temp file is removed.
-        if 'temp_file_path' in locals() and os.path.exists(temp_file_path):
+        if 'tempFile_path' in locals() and os.path.exists(tempFile_path):
             try:
-                os.remove(temp_file_path)
+                os.remove(tempFile_path)
             except PermissionError:
                 import time
                 time.sleep(1)
-                os.remove(temp_file_path)
+                os.remove(tempFile_path)

@@ -4,21 +4,13 @@
 {% block content %}
 
 <!-- Include the analysis selection form -->
+<div id="AnalysisErrorsContainer" style="display: none;"></div>
+
 {% include "analysisSelection.html" %}
 
-<!-- Include the image upload form -->
-{% include "imageUpload.html" %}
-
-<!-- Scrape in stream source data -->
-<div id="UploadFeedSourceRecordsContainer">
-    <h3>Scrape Live Feed Source Data</h3>
-    <form method="post" action="{% url 'scrapeAndSaveFeedData' %}">
-        {% csrf_token %}
-        <button class="SubmitBtn" type="submit">Scrape and Save Data</button>
-    </form>
-    {% if feedSources %}
-        <p>Total Feed Sources: {{ feedSources|length }}</p>
-    {% endif %}
+<div class="row">
+    <!-- Include the image upload form -->
+    {% include "imageUpload.html" %}
 </div>
 
 <!-- Display success/error messages -->

@@ -1,6 +1,8 @@
 from django.apps import AppConfig
 
-
-class RealtimemonitorConfig(AppConfig):
-    default_auto_field = 'django.db.models.BigAutoField'
+class MyAppConfig(AppConfig):
     name = 'RealTimeMonitor'
+    def ready(self):
+        from realtime.tasksQueue import runCleanupScheduler, startQueueWorker
+        runCleanupScheduler()
+        startQueueWorker()

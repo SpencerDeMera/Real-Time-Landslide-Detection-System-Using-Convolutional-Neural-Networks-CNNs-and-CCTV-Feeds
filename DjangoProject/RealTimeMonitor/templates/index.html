@@ -16,10 +16,12 @@
     <body>
         <div class="bg-dark" id="PageNav">
             <nav class="container navbar navbar-expand-lg navbar-dark bg-dark">
-                <a class="navbar-brand" href="#">LandslideLens</a>
-                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+                <a class="navbar-brand" href="/">LandslideLens</a>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
                 <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav">
+                    <ul class="navbar-nav mr-auto">  <!-- Added mr-auto here -->
                         <li class="nav-item">
                             <a class="nav-link" href="/">Home</a>
                         </li>
@@ -30,17 +32,39 @@
                             <a class="nav-link" href="/images">Images</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="/tasks">Tasks</a>
-                        </li>
-                        <li class="nav-item">
                             <a class="nav-link" href="/about">About</a>
                         </li>
                     </ul>
+                    <!-- Added refresh icon on the right -->
+                    <div class="d-flex">
+                        <a href="#" id="refreshButton" class="nav-link text-white" title="Refresh page">
+                            <i class="fas fa-sync-alt"></i>
+                        </a>
+                    </div>
                 </div>
             </nav>
         </div>
 
-        <div class="container">{% block content %} {% endblock %}</div>
+        <!-- Add this script at the bottom of your template -->
+        <script>
+            document.getElementById('refreshButton').addEventListener('click', function(e) {
+                e.preventDefault();  // Prevent the default anchor behavior
+                location.reload();  // Reload the page
+            });
+        </script>
+
+        <div class="wrapper">
+            <main class="content">
+                <div class="container">{% block content %} {% endblock %}</div>
+            </main>
+
+            <footer class="footer">
+                <div class="container">
+                    <p>Website Version 1.0</p>
+                    <p>Copyright &copy; {% now "Y" %} LandslideLens. All rights reserved.</p>
+                </div>
+            </footer>
+        </div>
 
         <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
         <script src="https://kit.fontawesome.com/229097917e.js" crossorigin="anonymous"></script>

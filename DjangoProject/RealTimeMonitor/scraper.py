@@ -47,3 +47,38 @@ def extractData(MASTER_PAGE_URL):
             seen_streamSources.add(item["streamSource"])
 
     return unique_data
+
+def extractWeatherZones(MASTER_PAGE_URL):
+    response = requests.get(MASTER_PAGE_URL)
+    response.raise_for_status()  # Check for HTTP errors
+
+    zones = []
+    for line in response.text.splitlines():
+        parts = line.strip().split("|")
+        if len(parts) != 11:
+            continue  # Skip malformed lines
+
+        zones.append({
+            "state": parts[0],
+            "zoneId": parts[1],
+            "region": parts[2],
+            "zoneName": parts[3],
+            "zoneCode": parts[4],
+            "county": parts[5],
+            "fipsCode": parts[6],
+            "zoneType": parts[7],
+            "direction": parts[8],
+            "latitude": float(parts[9]),
+            "longitude": float(parts[10]),
+        })
+
+    # Remove duplicates based on zoneCode
+    unique = []
+    seenZoneCodes = set()
+    for zone in zones:
+        if zone["zoneCode"] not in seenZoneCodes:
+            unique.append(zone)
+            seenZoneCodes.add(zone["zoneCode"])
+
+    return unique
+

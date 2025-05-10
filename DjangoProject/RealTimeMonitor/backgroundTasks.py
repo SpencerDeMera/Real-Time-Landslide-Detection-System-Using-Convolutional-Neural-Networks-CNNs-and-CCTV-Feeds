@@ -1,29 +1,47 @@
-from celery import shared_task
 from RealTimeMonitor.models import MediaFile, feedSource
 from .cnn import loadModel, getTransform
 from .media import extractImageUrl, downloadImage
 from PIL import Image
 from datetime import timedelta
 from django.utils import timezone
+from django.db import close_old_connections
 import torch
 import torch.nn.functional as F
 import io
+import os
+import time
 
-@shared_task
+def waitForMediaFile(filePath, timeout=5.0, pollInterval=0.05):
+    start = time.time()
+    while time.time() - start < timeout:
+        if filePath and os.path.exists(filePath):
+            return True
+        time.sleep(pollInterval)
+    return False
+
 def analyzeImagesTask(feedSourceIds, i, max):
+    close_old_connections()
+    errors = []
+
     try:
         model = loadModel()
         transform = getTransform()
 
         mediaFileIds = []
         selectedFeeds = feedSource.objects.filter(id__in=feedSourceIds)
+        
         for feed in selectedFeeds:
             try:
                 print(f"Processing feed: {feed.streamSourceName}")
                 feedSourceImageURL = extractImageUrl(feed.streamSource)
 
-                mediaFile = downloadImage(feedSourceImageURL, feed.streamSourceName)
+                result = downloadImage(feedSourceImageURL["image_url"], feed.streamSourceName)
 
+                if not result["success"]:
+                    errors.append(f"{feed.streamSourceName}: {result['error']}")
+                    continue
+
+                mediaFile = MediaFile.objects.get(id=result["mediaFileToAddorUpdate"]["id"])
                 feed.isPolling = True
                 feed.lastPollDate = timezone.now()
                 feed.save()
@@ -31,7 +49,7 @@ def analyzeImagesTask(feedSourceIds, i, max):
                 mediaFile.feed = feed
                 mediaFile.save()
 
-                mediaFileIds.append(str(mediaFile.id))
+                mediaFileIds.append(str(result["mediaFileToAddorUpdate"]["id"]))
 
             except Exception as e:
                 print(f"Error analyzing image from {feed.streamSourceName}: {e}")
@@ -40,6 +58,13 @@ def analyzeImagesTask(feedSourceIds, i, max):
         for mediaFileId in mediaFileIds:
             try:
                 mediaFile = MediaFile.objects.get(id=mediaFileId)
+                file_path = getattr(mediaFile.mediaFile, 'path', None)
+                print(f"Waiting for file: {file_path}")
+                if not waitForMediaFile(file_path):
+                    print(f"File did not appear in time for mediaFileId {mediaFileId}. Skipping.")
+                    continue
+
+                print(f"Opening file: {file_path}")
                 imageBytes = mediaFile.mediaFile.read()
                 mediaFile.mediaFile.close()
                 image = Image.open(io.BytesIO(imageBytes)).convert("RGB")
@@ -70,15 +95,9 @@ def analyzeImagesTask(feedSourceIds, i, max):
                         feed.save()
                 except Exception as e:
                     print(f"Error marking feed polling complete: {e}")
-        # Schedule next run if needed
-        elif i < max:
-            analyzeImagesTask.apply_async(args=[feedSourceIds, i + 1, max], countdown=10 * 60)
     except Exception as e:
         print(f"[TASK ROOT ERROR] {e}")
-        raise
 
-
-@shared_task
 def cleanupOldImages():
     cuttOff = timezone.now() - timedelta(days=14)
     # Filter for images older than 14 days with prediction equal to 0

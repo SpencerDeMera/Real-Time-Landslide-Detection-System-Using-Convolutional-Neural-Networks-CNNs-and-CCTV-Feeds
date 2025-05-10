@@ -1,12 +1,38 @@
 :root {
     --primary-bg: #dfe4ec;
     --pos-btn: #2197ff;
-    --neg-btn: #ff4a21;
+    --neg-btn: crimson;
+    --theme: #343a40;
 }
 
 /* === General Bootstrap Overrides === */
+html, body {
+    height: 100%;
+    margin: 0;
+}
+
 p {
     margin-bottom: 0;
+}
+
+.navbar {
+    max-width: 90%;
+}
+
+.wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+}
+
+@media (min-width:992px) {
+    .wrapper .container {
+        max-width: 95%;
+    }
+}
+
+.content {
+    flex: 1;
 }
 
 .section-title {
@@ -44,20 +70,46 @@ p {
 }
 
 #UploadFeedSourceRecordsContainer {
-    padding-bottom: 25px;
+    padding: 25px 0;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    flex-direction: column;
+}
+
+#AnalysisErrorsContainer {
+    color: white;
+    background-color: red;
+    padding: 5px;
+    border-radius: 10px;
+}
+
+#AnalysisErrorsContainer ul {
+    margin-bottom: 0;
 }
 
 /* === Image Uploads === */
 #MediaUploadAndDisplayContainer {
-    /*padding: 1rem;*/
-    /*border-radius: 15px;*/
-    /*background-color: var(--primary-bg);*/
-    /*border: 1px solid rgba(168, 168, 168, 0.3) !important;*/
-    /*box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.08) !important;*/
+    gap: 10px;
+    padding: 1.25rem;
+    margin-top: 25px;
+    margin-bottom: 15px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+#MediaUploadAndDisplayContainer .section-title {
+    border-bottom: none;
 }
 
 #ImageUploadContainer {
     margin-bottom: 25px;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    flex-direction: column;
 }
 
 .UploadedImageSubDisplayContainer {
@@ -209,14 +261,11 @@ p {
 }
 
 #ImageTableContainer button {
-    background-color: #ff4d4d;
+    background-color: var(--neg-btn);
     color: white;
     border: none;
     padding: 5px 10px;
     cursor: pointer;
-}
-#ImageTableContainer button:hover {
-    background-color: #cc0000;
 }
 
 /* === Route Dropdowns === */
@@ -263,6 +312,11 @@ p {
     padding: 15px;
 }
 
+#FeedSourcesPolling .route-content {
+    display: block;
+    padding: 15px;
+}
+
 .route-content table {
     width: 100%;
     border-collapse: collapse;
@@ -295,4 +349,246 @@ p {
     border: none;
     border-radius: 4px;
     cursor: pointer;
+}
+
+/* === About Us === */
+.aboutus-text {
+    font-size: 1.2rem;
+    font-weight: 500;
+}
+
+.toolsSection {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 12%;
+}
+
+.toolsContainer {
+    width: 100%;
+    max-width: 1500px;
+}
+
+.toolsTitling {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #12111a;
+    color: black;
+}
+
+.toolsContainer, .toolsTitling {
+    flex-direction: column;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.toolsBody, .toolsGrids {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.toolsGrids {
+    flex-wrap: wrap;
+    grid-gap: 50px;
+    gap: 50px;
+    padding: 50px;
+    width: 100%;
+    justify-content: space-evenly;
+    justify-items: center;
+    align-content: space-evenly;
+}
+.toolsBody, .toolsGrids {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.catsTitle {
+    color: #12111a;
+    font-size: 20px;
+    font-weight: 600;
+    font-family: "Poppins",sans-serif;
+}
+
+#front_icon {
+    color: #33a9ff;
+}
+#back_icon {
+    color: #f8df00;
+}
+#api_icon {
+    color: #9834eb;
+}
+
+.toolsIcon {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 50px;
+    width: 50px;
+}
+
+.cats,
+.catsTitling,
+.toolsList {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+.toolsList {
+    font-weight: 600;
+    margin: 10px 0;
+}
+
+.cats {
+    border-radius: 25px;
+    width: 200px;
+    box-shadow: 0 15px 25px -5px;
+    box-shadow: 0 10px 10px rgba(51,51,51,.2);
+}
+
+/* === Home === */
+#HomePageContainer {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+#DetectedAnomalies {
+
+}
+
+#MediaFilesWAnomalies {
+    gap: 10px;
+    background-color: #f5f5f5;
+    border-radius: 5px;
+    box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.08) !important;
+}
+
+.media-group {
+    margin-bottom: 15px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.media-content {
+    display: none;
+    padding: 15px;
+}
+
+.media-content table {
+    width: 100%;
+}
+
+.media-content th,
+.media-content td {
+    padding: 8px;
+    border-bottom: 1px solid #eee;
+}
+
+#MediaFilesWAnomalies .media-content {
+    display: block;
+    padding: 15px;
+}
+
+#MediaFilesWAnomalies .ImageFile {
+    animation: pulsate 1.5s infinite;
+}
+
+@keyframes pulsate {
+    0% {
+        box-shadow: 0 0 0 0px crimson;
+    }
+    50% {
+        box-shadow: 0 0 0 15px rgba(220, 20, 60, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0px rgba(220, 20, 60, 0);
+    }
+}
+
+#FeedSourcesPolling {
+    gap: 10px;
+    background-color: #f5f5f5;
+    border-radius: 5px;
+    box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.08) !important;
+}
+
+.weather-alert-container {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 10px;
+    padding: 1.25rem;
+    background-color: #f5f5f5;
+    border-radius: 5px;
+    border: 1px solid rgba(168, 168, 168, 0.3) !important;
+    box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.08) !important;
+    margin-bottom: 15px;
+}
+
+.weather-alert-container .weather-alert-title {
+    font-weight: 600;
+    font-size: 1.25rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: row;
+    gap: 10px;
+}
+
+.weatherIcon {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 36px;
+    width: 36px;
+    border-radius: 50%;
+}
+
+.weatherIcon i {
+    margin-top: 4px;
+}
+
+#alert_icon {
+    color: crimson;
+}
+
+.weather-alert-container .weather-alert-headline {
+    font-weight: 600;
+}
+
+.weather-alert-container .wetaher-info-message {
+    font-weight: 500;
+    font-size: 0.85rem;
+}
+
+@media (max-width:991px) {
+    #HomePageContainer {
+        margin: 0px 5px 0px 5px;
+    }
+}
+
+/* === Footer === */
+.footer {
+    background-color: var(--theme) !important;
+    padding: 15px 0;
+    text-align: center;
+    box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+    color: white;
+}
+
+.footer .container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
 }

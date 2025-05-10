@@ -8,10 +8,6 @@ import gc
 # python manage.py makemigrations
 # python manage.py migrate
 
-class TaskItem(models.Model):
-    title = models.CharField(max_length=200)
-    completed = models.BooleanField(default=False)
-
 class MediaFile(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     mediaFile = models.ImageField(upload_to='uploads/')
@@ -31,6 +27,19 @@ class feedSource(models.Model):
     nearbyPlace = models.CharField(max_length=255, null=True, blank=True)
     isPolling = models.BooleanField(default=False, blank=True)
     lastPollDate = models.DateTimeField(auto_now=True, blank=True)
+
+class WeatherZone(models.Model):
+    state = models.CharField(max_length=2)
+    zoneId = models.CharField(max_length=10)
+    region = models.CharField(max_length=10)
+    zoneName = models.CharField(max_length=100)
+    zoneCode = models.CharField(max_length=10, unique=True)
+    county = models.CharField(max_length=100)
+    fipsCode = models.CharField(max_length=10)
+    zoneType = models.CharField(max_length=1)
+    direction = models.CharField(max_length=10)
+    latitude = models.FloatField()
+    longitude = models.FloatField()
 
 @receiver(post_delete, sender=MediaFile)
 def auto_delete_file_on_delete(sender, instance, **kwargs):

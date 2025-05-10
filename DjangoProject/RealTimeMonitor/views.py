@@ -3,11 +3,11 @@ from django.http import JsonResponse
 from django.contrib import messages
 from django.views.decorators.csrf import csrf_exempt
 from .forms import UploadImageForm
-from .models import TaskItem, MediaFile, feedSource
+from .models import MediaFile, feedSource, WeatherZone
 from .cnn import loadModel, getTransform
 from .media import extractImageUrl, downloadImage
-from .backgroundTasks import analyzeImagesTask
-from .scraper import extractData
+from realtime.tasksQueue import tasksQueue
+from .scraper import extractData, extractWeatherZones
 from django.utils.safestring import mark_safe
 from django.db.models import Case, When, Value, IntegerField
 from django.db.models.functions import Substr, Cast
@@ -23,8 +23,12 @@ import json
 
 def home(request):
     images = MediaFile.objects.all().order_by('-uploadedDate')
+    feedSources = feedSource.objects.all()
+    weatherZones = WeatherZone.objects.all()
     return render(request, 'home.html', {
-        'images': images,  # Pass the images to the template
+        'images': images,
+        'weatherZones': feedSources,
+        'weatherZones': weatherZones,
     })
 
 def analyze(request):
@@ -54,10 +58,104 @@ def analyze(request):
 
     return render(request, 'analyze.html', {
         'image_form': image_form,
-        'images': images,  # Pass the images to the template
+        'images': images,
         'feedSources': feedSources,
         'groupedFeedSources': groupedFeedSources,
     })
+
+def getGroupedFeedSourcesJson(request):
+    feedSources = feedSource.objects.annotate(
+        routeOrder=Case(
+            When(route__startswith='I-', then=Value(1)),
+            When(route__startswith='US-', then=Value(2)),
+            When(route__startswith='SR-', then=Value(3)),
+            default=Value(4),
+            output_field=IntegerField()
+        ),
+        routeNum=Case(
+            When(route__startswith='I-', then=Cast(Substr('route', 3), output_field=IntegerField())),
+            When(route__startswith='US-', then=Cast(Substr('route', 4), output_field=IntegerField())),
+            When(route__startswith='SR-', then=Cast(Substr('route', 4), output_field=IntegerField())),
+            default=Value(4),
+            output_field=IntegerField()
+        )
+    ).order_by('routeOrder', 'routeNum')
+
+    grouped = {}
+    for key, group in groupby(feedSources, key=attrgetter('route')):
+        grouped[key] = [
+            {
+                'id': fs.id,
+                'streamSourceName': fs.streamSourceName,
+                'county': fs.county,
+                'nearbyPlace': fs.nearbyPlace,
+                'lastPollDate': fs.lastPollDate.isoformat(),
+                'isPolling': fs.isPolling
+            } for fs in group
+        ]
+
+    return JsonResponse({'groupedFeedSources': grouped})
+
+def getPollingFeedSourcesJson(request):
+    feedSources = feedSource.objects.filter(
+        isPolling=True
+    ).order_by('-lastPollDate').values(
+        'id',
+        'streamSourceName',
+        'county',
+        'nearbyPlace',
+        'lastPollDate',
+        'isPolling',
+        'route'
+    )
+
+    return JsonResponse({'feedSources': list(feedSources)})
+
+def getPositivePredictedMediaFilesJson(request):
+    mediaFiles = MediaFile.objects.filter(
+        prediction=1
+    ).order_by('-uploadedDate').values(
+        'id',
+        'mediaFile',
+        'uploadedDate',
+        'locationName',
+        'prediction',
+        'predictionString',
+        'isManualUpload',
+        'feed_id'
+    )
+
+    return JsonResponse({'mediaFiles': list(mediaFiles)})
+
+def checkIfZoneIsValidForCountyJson(zoneCodes):
+    return WeatherZone.objects.filter(
+        zoneCode__in=zoneCodes,
+        county__in=feedSource.objects.values('county')
+    ).exists()
+
+
+@csrf_exempt
+def checkIfZoneIsValidForCountyJson(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body.decode('utf-8'))
+            zoneCodes = data.get('zoneCodes', [])
+
+            if not zoneCodes:
+                return JsonResponse({'error': 'No zone codes provided'}, status=400)
+
+            is_valid = WeatherZone.objects.filter(
+                zoneCode__in=zoneCodes,  # Note: underscore
+                county__in=feedSource.objects.values('county')
+            ).exists()
+
+            return JsonResponse({'isValid': is_valid})
+
+        except json.JSONDecodeError as e:
+            return JsonResponse({'error': f'Invalid JSON: {str(e)}'}, status=400)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=400)
+    return JsonResponse({'error': 'Only POST requests allowed'}, status=400)
 
 def images(request):
     # Get sorting and filtering parameters from GET request
@@ -82,11 +180,6 @@ def images(request):
         mediaFiles = mediaFiles.order_by(sort_order)
 
     return render(request, 'imageTable.html', {'mediaFiles': mediaFiles, 'filter_prediction': filter_prediction, 'sort_order': sort_order})
-
-
-def tasks(request):
-    items = TaskItem.objects.all()
-    return render(request, 'tasks.html', {'tasks': items})
 
 def about(request):
     return render(request, 'about.html')
@@ -169,9 +262,10 @@ def analyzeImage(request, image_id):
     else:
         return JsonResponse({'error': 'Invalid request method'}, status=400)
 
-
 @csrf_exempt
 def bulkAnalyzeImages(request):
+    errors = []
+
     if request.method == "POST":
         try:
             # Handle both form data and JSON input
@@ -183,7 +277,7 @@ def bulkAnalyzeImages(request):
                 selectedIds = request.POST.getlist('selectedIds')
                 hours = int(request.POST.get('analysisDuration', 1))
 
-            max = hours * 5  # Since it's every 30 mins
+            max = hours * 4  # Since it's every 30 mins
 
             # Convert to UUIDs
             feedSourceIds = [UUID(id) for id in selectedIds]
@@ -197,10 +291,19 @@ def bulkAnalyzeImages(request):
                 for feed in selectedFeeds:
                     try:
                         print(f"Processing feed: {feed.streamSourceName}")
-                        feedSourceImageURL = extractImageUrl(feed.streamSource)
+                        image_result = extractImageUrl(feed.streamSource)
+                        if not image_result["success"]:
+                            errors.append(f"{feed.streamSourceName}: {image_result['error']}")
+                            continue
 
-                        mediaFile = downloadImage(feedSourceImageURL, feed.streamSourceName)
+                        feedSourceImageURL = image_result["image_url"]
 
+                        result = downloadImage(feedSourceImageURL, feed.streamSourceName)
+                        if not result["success"]:
+                            errors.append(f"{feed.streamSourceName}: {result['error']}")
+                            continue
+
+                        mediaFile = MediaFile.objects.get(id=result["mediaFileToAddorUpdate"]["id"])
                         feed.isPolling = True
                         feed.lastPollDate = timezone.now()
                         feed.save()
@@ -208,7 +311,7 @@ def bulkAnalyzeImages(request):
                         mediaFile.feed = feed
                         mediaFile.save()
 
-                        mediaFileIds.append(str(mediaFile.id))
+                        mediaFileIds.append(str(result["mediaFileToAddorUpdate"]["id"]))
 
                     except Exception as e:
                         print(f"Error analyzing image from {feed.streamSourceName}: {e}")
@@ -239,39 +342,99 @@ def bulkAnalyzeImages(request):
                         print(f"Error analyzing media {mediaFileId}: {e}")
                         continue
             else:
-                analyzeImagesTask.delay(feedSourceIds, i=1, max=max)
+                tasksQueue.put((feedSourceIds, max))
 
-            return redirect("analyze")
+            if errors:
+                # Return errors as JSON
+                return JsonResponse({
+                    'success': False,
+                    'errors': errors,
+                }, status=400)  # HTTP 400 for client errors
+            else:
+                # Return success response
+                return JsonResponse({
+                    'success': True,
+                    'redirect_url': '/analyze/',  # Optional: Redirect on success
+                })
 
         except ValueError as e:
-            error_msg = 'Invalid ID format'
-            return render(request, 'analyze.html', {'error': error_msg})
+            return JsonResponse({
+                'success': False,
+                'error': 'Invalid ID format',
+            }, status=400)
 
         except Exception as e:
-            error_msg = f'Server error: {str(e)}'
-            return render(request, 'analyze.html', {'error': error_msg})
+            return JsonResponse({
+                'success': False,
+                'error': f'Server error: {str(e)}',
+            }, status=500)  # HTTP 500 for server errors
 
-    return render(request, 'analyze.html')
+    return JsonResponse({
+        'success': False,
+        'error': 'Invalid request method',
+    }, status=405)  # HTTP 405 for wrong method
 
 def scrapeAndSaveFeedData(request):
     if request.method == "POST":
         MASTER_PAGE_URL = "https://cwwp2.dot.ca.gov/vm/streamlist.htm"
         data = extractData(MASTER_PAGE_URL)
 
+        created_count = 0
         for item in data:
-            feedSource.objects.create(
+            # Check if a record with these exact fields already exists
+            obj, created = feedSource.objects.get_or_create(
                 streamSource=item["streamSource"],
                 streamSourceName=item["streamSourceName"],
                 route=item["route"],
                 county=item["county"],
                 nearbyPlace=item["nearbyPlace"],
-                isPolling=False
+                defaults={
+                    'isPolling': False
+                }
             )
+            if created:
+                created_count += 1
 
-        messages.success(request, "Data scraped and saved successfully!")
-        return redirect("analyze")
+        messages.success(request, f"Data scraped successfully! {created_count} new records added.")
+        return redirect("home")
 
-    return render(request, 'analyze.html')
+    return render(request, 'home.html')
+
+def scrapeNWSZoneData(request):
+    if request.method == "POST":
+        url = "https://www.weather.gov/source/gis/Shapefiles/County/bp05mr24.dbx"
+        zoneData = extractWeatherZones(url)
+
+        created_count = 0
+        for zone in zoneData:
+            existing_zones = WeatherZone.objects.filter(zoneId=zone["zoneId"])
+            if existing_zones.exists():
+                if existing_zones.count() > 1:
+                    # Optionally log or clean up duplicates
+                    existing_zones.delete()  # You could also keep one and delete the rest
+                else:
+                    continue  # Skip creation if one valid match already exists
+
+            # Create new WeatherZone
+            WeatherZone.objects.create(
+                zoneId=zone["zoneId"],
+                state=zone["state"],
+                region=zone["region"],
+                zoneName=zone["zoneName"],
+                zoneCode=zone["zoneCode"],
+                county=zone["county"],
+                fipsCode=zone["fipsCode"],
+                zoneType=zone["zoneType"],
+                direction=zone["direction"],
+                latitude=zone["latitude"],
+                longitude=zone["longitude"],
+            )
+            created_count += 1
+
+        messages.success(request, f"Data scraped successfully! {created_count} new records added.")
+        return redirect("home")
+
+    return render(request, 'home.html')
 
 def bulkFeedSourceDelete(request):
     if request.method == 'POST':

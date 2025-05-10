@@ -14,7 +14,7 @@ def queueWorker():
             print(f"[Queue] Running analyzeImagesTask for feeds {feedSourceIds}, iteration {i}/{maxNumRuns}")
             try:
                 # Import here to avoid circular imports
-                from RealTimeMonitor.views import analyzeImagesTask
+                from RealTimeMonitor.backgroundTasks import analyzeImagesTask
                 analyzeImagesTask(feedSourceIds, i, maxNumRuns)
             except Exception as e:
                 print(f"Exception in analyzeImagesTask: {e}")
