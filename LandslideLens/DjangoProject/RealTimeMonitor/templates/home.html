@@ -63,10 +63,10 @@
         <div class="row">
             <!-- Scrape in stream source data -->
             <div id="UploadFeedSourceRecordsContainer" class="col-lg-6">
-                <h3>Scrape Live Feed Source Data</h3>
+                <h3 style="text-align: center;">Scrape Live Feed Source Data</h3>
                 <form method="post" action="{% url 'scrapeAndSaveFeedData' %}">
                     {% csrf_token %}
-                    <button class="SubmitBtn" type="submit">Scrape and Save Data</button>
+                    <button class="SubmitBtn" type="submit" onclick="this.innerText='Scraping...'">Scrape and Save Data</button>
                 </form>
                 {% if feedSources %}
                     <p>Total Feed Sources: {{ feedSources|length }}</p>
@@ -74,10 +74,10 @@
             </div>
 
             <div id="UploadFeedSourceRecordsContainer" class="col-lg-6">
-                <h3>Scrape NOAA/NWS Zone Data</h3>
+                <h3 style="text-align: center;">Scrape NOAA/NWS Zone Data</h3>
                 <form method="post" action="{% url 'scrapeNWSZoneData' %}">
                     {% csrf_token %}
-                    <button class="SubmitBtn" type="submit">Scrape and Save Data</button>
+                    <button class="SubmitBtn" type="submit" onclick="this.innerText='Scraping...'">Scrape and Save Data</button>
                 </form>
                 {% if weatherZones %}
                     <p>Total Zones: {{ weatherZones|length }}</p>

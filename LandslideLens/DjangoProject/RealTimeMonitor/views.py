@@ -407,24 +407,29 @@ def scrapeNWSZoneData(request):
 
         created_count = 0
         for zone in zoneData:
-            # Check if a record with this zoneId already exists
-            obj, created = WeatherZone.objects.get_or_create(
+            existing_zones = WeatherZone.objects.filter(zoneId=zone["zoneId"])
+            if existing_zones.exists():
+                if existing_zones.count() > 1:
+                    # Optionally log or clean up duplicates
+                    existing_zones.delete()  # You could also keep one and delete the rest
+                else:
+                    continue  # Skip creation if one valid match already exists
+
+            # Create new WeatherZone
+            WeatherZone.objects.create(
                 zoneId=zone["zoneId"],
-                defaults={
-                    'state': zone["state"],
-                    'region': zone["region"],
-                    'zoneName': zone["zoneName"],
-                    'zoneCode': zone["zoneCode"],
-                    'county': zone["county"],
-                    'fipsCode': zone["fipsCode"],
-                    'zoneType': zone["zoneType"],
-                    'direction': zone["direction"],
-                    'latitude': zone["latitude"],
-                    'longitude': zone["longitude"],
-                }
+                state=zone["state"],
+                region=zone["region"],
+                zoneName=zone["zoneName"],
+                zoneCode=zone["zoneCode"],
+                county=zone["county"],
+                fipsCode=zone["fipsCode"],
+                zoneType=zone["zoneType"],
+                direction=zone["direction"],
+                latitude=zone["latitude"],
+                longitude=zone["longitude"],
             )
-            if created:
-                created_count += 1
+            created_count += 1
 
         messages.success(request, f"Data scraped successfully! {created_count} new records added.")
         return redirect("home")
